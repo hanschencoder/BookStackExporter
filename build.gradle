@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+sourceCompatibility = "8"
+targetCompatibility = "8"
+
+group 'site.hanschen'
+version '1.0-SNAPSHOT'
+mainClassName = 'site.hanschen.BookStackExporter'
+
+run {
+    args "-o", "./BookStack", "-t", "gitbook", "-host", "http://172.16.45.68:6875", "-tokenId", "6mmNKUPX4JtS2wxVBsPNjBWsdHoQXM8A", "-tokenSecret", "587dWlqZ1lgvD6xjMGWo1cAVbAMltfgf", "-f", "-h"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'commons-cli:commons-cli:1.5.0'
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'commons-io:commons-io:2.11.0'
+}
