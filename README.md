@@ -4,10 +4,21 @@ Support export from BookStack to Markdown, HTML, PDF, TXT and GitBook.
 
 # Download
 
+ - `0.1.0`: [https://github.com/shensky711/BookStackExporter/releases/tag/0.1.0](https://github.com/shensky711/BookStackExporter/releases/tag/0.1.0)
+
 # Usage
 
+ 1. unzip the archive you downloaded:
+
+```
+unzip BookStackExporter-0.1.0.zip
+cd BookStackExporter-0.1.0
+```
+
+ 2. exec export command:
+
 ```bash
-usage: BookStackExporter [-f] [-h] -host <arg> [-o <arg>] [-t <arg>] -tokenId <arg> -tokenSecret <arg>
+usage: ./bin/BookStackExporter [-f] [-h] -host <arg> [-o <arg>] [-t <arg>] -tokenId <arg> -tokenSecret <arg>
  -f,--force           Force overwrite
  -h,--help            Print help
  -host <arg>          Base url of BookStack
