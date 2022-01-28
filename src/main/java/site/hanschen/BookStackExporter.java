@@ -50,7 +50,7 @@ public class BookStackExporter {
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option("t", "type", true, "File type, [pdf|markdown|plaintext|html]");
+        opt = new Option("t", "type", true, "File type, [gitbook|pdf|markdown|plaintext|html]");
         opt.setRequired(false);
         options.addOption(opt);
 
