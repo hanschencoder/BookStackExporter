@@ -11,6 +11,7 @@ import site.hanschen.entry.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.*;
@@ -45,7 +46,7 @@ public class Exporter {
         File outDir = new File(mOutDir);
         if (outDir.exists()) {
             if (mForceOverwrite) {
-                FileUtils.deleteDirectory(outDir);
+                deleteExcludeGit(outDir);
             } else {
                 Log.println(outDir.getCanonicalPath() + " already exists, use [-f] option to overwrite.", Log.RED);
                 return;
@@ -62,6 +63,22 @@ public class Exporter {
         if (isGitBook()) {
             dumpBookSummary(root);
             downloadImage(root);
+        }
+    }
+
+    private void deleteExcludeGit(File file) throws IOException {
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File f : files) {
+                    if (f.getName().equals(".git")) {
+                        continue;
+                    }
+                    FileUtils.forceDelete(f);
+                }
+            }
+        } else {
+            FileUtils.forceDelete(file);
         }
     }
 
@@ -180,7 +197,7 @@ public class Exporter {
                         } else {
                             file = new File(parentDir, node.getFileName() + ".md");
                         }
-                        FileUtils.writeStringToFile(file, markdown, "UTF-8");
+                        FileUtils.writeStringToFile(file, markdown, StandardCharsets.UTF_8);
                     }
                 }
                 Log.println(prefix + " - " + node.getFileName());
@@ -242,7 +259,7 @@ public class Exporter {
             if (node.object instanceof Book) {
                 StringBuilder builder = new StringBuilder();
                 handleDumpSummary(node, node.path, "", builder);
-                FileUtils.writeStringToFile(new File(node.path, "SUMMARY.md"), builder.toString(), "UTF-8");
+                FileUtils.writeStringToFile(new File(node.path, "SUMMARY.md"), builder.toString(), StandardCharsets.UTF_8);
             }
         }
     }
@@ -295,7 +312,7 @@ public class Exporter {
 
         @Override
         public void handle(File file) throws IOException {
-            String content = FileUtils.readFileToString(file, "UTF-8");
+            String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             Matcher m = imagePattern.matcher(content);
             while (m.find()) {
                 String url = m.group(0).replaceAll("[()]", "");
@@ -315,7 +332,7 @@ public class Exporter {
 
         @Override
         public void handle(File file) throws IOException {
-            String content = FileUtils.readFileToString(file, "UTF-8");
+            String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             Matcher m = imagePattern.matcher(content);
             StringBuffer contentBuilder = new StringBuffer();
             while (m.find()) {
@@ -331,7 +348,7 @@ public class Exporter {
                 }
             }
             m.appendTail(contentBuilder);
-            FileUtils.writeStringToFile(file, contentBuilder.toString(), "UTF-8");
+            FileUtils.writeStringToFile(file, contentBuilder.toString(), StandardCharsets.UTF_8);
         }
     }
 

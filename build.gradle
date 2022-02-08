@@ -9,9 +9,11 @@ targetCompatibility = "8"
 group 'site.hanschen'
 version '0.1.0'
 mainClassName = 'site.hanschen.BookStackExporter'
+//mainClassName = 'site.hanschen.BookStackServer'
 
 run {
-    args "-o", "./BookStack", "-t", "gitbook", "-host", "http://172.16.45.68:6875", "-tokenId", "6mmNKUPX4JtS2wxVBsPNjBWsdHoQXM8A", "-tokenSecret", "587dWlqZ1lgvD6xjMGWo1cAVbAMltfgf", "-f", "-h"
+    args "-o", "./BookStack", "-t", "gitbook", "-host", "http://172.16.45.68:6875", "-tokenId", "6mmNKUPX4JtS2wxVBsPNjBWsdHoQXM8A", "-tokenSecret", "587dWlqZ1lgvD6xjMGWo1cAVbAMltfgf", "-f"
+//    args "-o", "./BookStack", "-host", "http://172.16.45.68:6875", "-tokenId", "6mmNKUPX4JtS2wxVBsPNjBWsdHoQXM8A", "-tokenSecret", "587dWlqZ1lgvD6xjMGWo1cAVbAMltfgf", "-gitlabToken", "d6TJxMXHr4byYQJG-Cy7", "-webhookPort", "6876"
 }
 
 repositories {
@@ -24,4 +26,5 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation 'commons-io:commons-io:2.11.0'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.0.0.202111291000-r'
 }

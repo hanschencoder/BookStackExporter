@@ -1,11 +1,18 @@
-package site.hanschen;
+package site.hanschen.sync;
 
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.spi.HttpServerProvider;
 import org.apache.commons.cli.*;
+import site.hanschen.Log;
+import site.hanschen.Utils;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.net.InetSocketAddress;
 
-public class BookStackExporter {
+/**
+ * @author chenhang
+ */
+public class BookStackServer {
 
     public static void main(String[] args) throws IOException {
         Utils.disableWarning();
@@ -15,27 +22,23 @@ public class BookStackExporter {
         }
 
         String outDir = commandLine.getOptionValue("o", "./BookStack");
-        String fileType = commandLine.getOptionValue("t", "markdown");
         String host = commandLine.getOptionValue("host", null);
         String tokenId = commandLine.getOptionValue("tokenId", null);
         String tokenSecret = commandLine.getOptionValue("tokenSecret", null);
-        boolean force = commandLine.hasOption("f");
-        Exporter exporter = new Exporter(outDir, fileType, host, tokenId, tokenSecret, force);
-        try {
-            exporter.start();
-        } catch (Exception e) {
-            Log.println("oops, " + e, Log.RED);
-            e.printStackTrace();
-        }
+        String gitlabToken = commandLine.getOptionValue("gitlabToken", null);
+        int port = Integer.parseInt(commandLine.getOptionValue("webhookPort"));
+
+        Log.println("WebHook Server Start");
+        HttpServerProvider provider = HttpServerProvider.provider();
+        HttpServer httpserver = provider.createHttpServer(new InetSocketAddress(port), 0);
+        httpserver.createContext("/webhooks", new BookStackHookHandler(outDir, host, tokenId, tokenSecret, gitlabToken));
+        httpserver.setExecutor(null);
+        httpserver.start();
     }
 
     private static CommandLine parserOption(String[] args) {
         Options options = new Options();
         Option opt = new Option("o", "output", true, "Export dir");
-        opt.setRequired(false);
-        options.addOption(opt);
-
-        opt = new Option("t", "type", true, "File type, [gitbook|pdf|markdown|plaintext|html]");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -57,11 +60,15 @@ public class BookStackExporter {
         opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option("h", "help", false, "Print help");
-        opt.setRequired(false);
+        opt = new Option("webhookPort", null, true, "BookStack web hook port");
+        opt.setRequired(true);
         options.addOption(opt);
 
-        opt = new Option("f", "force", false, "Force overwrite");
+        opt = new Option("gitlabToken", null, true, "Gitlab personal access tokens");
+        opt.setRequired(true);
+        options.addOption(opt);
+
+        opt = new Option("h", "help", false, "Print help");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -70,22 +77,18 @@ public class BookStackExporter {
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine commandLine = parser.parse(options, args);
-
-            String[] fileTypes = new String[]{"html", "pdf", "plaintext", "markdown", "gitbook"};
-            String fileType = commandLine.getOptionValue("t", "markdown");
-            if (!Arrays.asList(fileTypes).contains(fileType)) {
-                Log.println("Invalid file type, must be one of [gitbook|pdf|markdown|plaintext|html]\n", Log.RED);
-                hf.printHelp("BookStackExporter", options, true);
-                return null;
+            try {
+                int port = Integer.parseInt(commandLine.getOptionValue("webhookPort"));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("webhookPort=" + commandLine.getOptionValue("webhookPort"));
             }
-
             if (commandLine.hasOption("h")) {
-                hf.printHelp("BookStackExporter", options, true);
+                hf.printHelp("BookStackServer", options, true);
             }
-
             return commandLine;
-        } catch (ParseException ignored) {
-            hf.printHelp("BookStackExporter", options, true);
+        } catch (Exception e) {
+            hf.printHelp("BookStackServer", options, true);
+            Log.println(e.toString(), Log.RED);
         }
         return null;
     }

@@ -13,4 +13,8 @@ public class GsonUtils {
     public static String toJson(Object object) {
         return gson.toJson(object);
     }
+
+    public static <T> T fromJson(String json, Class<T> clz) {
+        return gson.fromJson(json, clz);
+    }
 }
