@@ -37,7 +37,7 @@ public class Exporter {
         mToken = "Token " + tokenId + ":" + tokenSecret;
         mForceOverwrite = forceOverwrite;
 
-        imagePattern = Pattern.compile("(\\(" + baseUrl + "/uploads/images/gallery){1}[^)]+(\\)){1}");
+        imagePattern = Pattern.compile(baseUrl + "/uploads/images/(gallery|drawio)[^)\"]+(.png|.jpg|.gif){1}");
 
         Retrofit retrofit = new Retrofit.Builder().baseUrl(mBaseUrl).addConverterFactory(GsonConverterFactory.create()).build();
         mBookStackApi = retrofit.create(BookStackApi.class);
@@ -317,7 +317,7 @@ public class Exporter {
             String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             Matcher m = imagePattern.matcher(content);
             while (m.find()) {
-                String url = m.group(0).replaceAll("[()]", "");
+                String url = m.group(0);
                 File path = new File(assetsDir, url.replace(mBaseUrl, ""));
                 imageDownloader.addTask(url, path);
             }
@@ -338,13 +338,13 @@ public class Exporter {
             Matcher m = imagePattern.matcher(content);
             StringBuffer contentBuilder = new StringBuffer();
             while (m.find()) {
-                String remoteUrl = m.group(0).replaceAll("[()]", "");
+                String remoteUrl = m.group(0);
                 File localFile = urls.get(remoteUrl);
                 if (localFile != null && localFile.exists()) {
                     String relative = Paths.get(file.getParentFile().getCanonicalPath())
                             .relativize(Paths.get(localFile.getCanonicalPath()))
                             .toString();
-                    m.appendReplacement(contentBuilder, "(" + relative + ")");
+                    m.appendReplacement(contentBuilder, relative);
                 } else {
                     m.appendReplacement(contentBuilder, m.group(0));
                 }
