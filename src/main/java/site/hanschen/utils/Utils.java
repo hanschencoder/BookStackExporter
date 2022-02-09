@@ -1,4 +1,4 @@
-package site.hanschen;
+package site.hanschen.utils;
 
 import sun.misc.Unsafe;
 

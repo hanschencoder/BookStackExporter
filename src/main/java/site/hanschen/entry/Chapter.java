@@ -1,7 +1,7 @@
 package site.hanschen.entry;
 
 import com.google.gson.annotations.SerializedName;
-import site.hanschen.Utils;
+import site.hanschen.utils.Utils;
 
 import java.util.List;
 

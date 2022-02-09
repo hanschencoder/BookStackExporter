@@ -1,4 +1,4 @@
-package site.hanschen;
+package site.hanschen.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

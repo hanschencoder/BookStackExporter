@@ -7,13 +7,32 @@ sourceCompatibility = "8"
 targetCompatibility = "8"
 
 group 'site.hanschen'
-version '0.1.0'
-mainClassName = 'site.hanschen.BookStackExporter'
-//mainClassName = 'site.hanschen.BookStackServer'
+version '0.1.1'
+mainClassName = 'site.hanschen.Main'
+
+static def splitArgs(String command) {
+    StringTokenizer st = new StringTokenizer(command)
+    String[] cmdArray = new String[st.countTokens()]
+    for (int i = 0; st.hasMoreTokens(); i++) {
+        cmdArray[i] = st.nextToken();
+    }
+    return cmdArray
+}
+
 
 run {
-    args "-o", "./BookStack", "-t", "gitbook", "-host", "http://172.16.45.68:6875", "-tokenId", "6mmNKUPX4JtS2wxVBsPNjBWsdHoQXM8A", "-tokenSecret", "587dWlqZ1lgvD6xjMGWo1cAVbAMltfgf", "-f"
-//    args "-o", "./BookStack", "-host", "http://172.16.45.68:6875", "-tokenId", "6mmNKUPX4JtS2wxVBsPNjBWsdHoQXM8A", "-tokenSecret", "587dWlqZ1lgvD6xjMGWo1cAVbAMltfgf", "-gitlabToken", "d6TJxMXHr4byYQJG-Cy7", "-webhookPort", "6876"
+    args splitArgs('''-syncServer 
+                      -o ./BookStack 
+                      -t gitbook 
+                      -baseUrl http://172.16.45.68:6875 
+                      -tokenId 6mmNKUPX4JtS2wxVBsPNjBWsdHoQXM8A 
+                      -tokenSecret 587dWlqZ1lgvD6xjMGWo1cAVbAMltfgf
+                      -webhookPort 6876 
+                      -gitlabToken d6TJxMXHr4byYQJG-Cy7 
+                      -gitbookName 我的图书 
+                      -gitbookDir ./GitBook 
+                      -h
+                   ''')
 }
 
 repositories {

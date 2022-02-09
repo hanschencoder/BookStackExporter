@@ -1,4 +1,4 @@
-package site.hanschen;
+package site.hanschen.exporter;
 
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
@@ -6,7 +6,9 @@ import org.apache.commons.io.IOUtils;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import site.hanschen.api.BookStackApi;
 import site.hanschen.entry.*;
+import site.hanschen.utils.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,23 +23,23 @@ import java.util.regex.Pattern;
 public class Exporter {
 
     private final String mOutDir;
-    private final String mFileType;
-    private final String mHost;
+    private final String mExportType;
+    private final String mBaseUrl;
     private final String mToken;
     private final boolean mForceOverwrite;
     private final BookStackApi mBookStackApi;
     private final Pattern imagePattern;
 
-    public Exporter(String outDir, String fileType, String host, String tokenId, String tokenSecret, boolean forceOverwrite) {
+    public Exporter(String outDir, String exportType, String baseUrl, String tokenId, String tokenSecret, boolean forceOverwrite) {
         mOutDir = outDir;
-        mFileType = fileType;
-        mHost = host;
+        mExportType = exportType;
+        mBaseUrl = baseUrl;
         mToken = "Token " + tokenId + ":" + tokenSecret;
         mForceOverwrite = forceOverwrite;
 
-        imagePattern = Pattern.compile("(\\(" + host + "/uploads/images/gallery){1}[^)]+(\\)){1}");
+        imagePattern = Pattern.compile("(\\(" + baseUrl + "/uploads/images/gallery){1}[^)]+(\\)){1}");
 
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(mHost).addConverterFactory(GsonConverterFactory.create()).build();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(mBaseUrl).addConverterFactory(GsonConverterFactory.create()).build();
         mBookStackApi = retrofit.create(BookStackApi.class);
     }
 
@@ -54,7 +56,7 @@ public class Exporter {
 
         }
         FileUtils.forceMkdir(outDir);
-        Log.println("FileType=" + mFileType + ", OutDir=" + outDir.getCanonicalPath() + "\n");
+        Log.println("ExportType=" + mExportType + ", OutDir=" + outDir.getCanonicalPath() + "\n");
 
         Node<?> root = buildBookHierarchy();
         root.path = outDir;
@@ -219,7 +221,7 @@ public class Exporter {
     }
 
     private String getFileSuffix() {
-        switch (mFileType) {
+        switch (mExportType) {
             case "html":
                 return ".html";
             case "pdf":
@@ -230,12 +232,12 @@ public class Exporter {
             case "gitbook":
                 return ".md";
             default:
-                throw new IllegalStateException("Unsupported file type: " + mFileType);
+                throw new IllegalStateException("Unsupported export type: " + mExportType);
         }
     }
 
     private String getFileType() {
-        switch (mFileType) {
+        switch (mExportType) {
             case "html":
                 return "html";
             case "pdf":
@@ -246,12 +248,12 @@ public class Exporter {
             case "gitbook":
                 return "markdown";
             default:
-                throw new IllegalStateException("Unsupported file type: " + mFileType);
+                throw new IllegalStateException("Unsupported export type: " + mExportType);
         }
     }
 
     private boolean isGitBook() {
-        return "gitbook".equals(mFileType);
+        return "gitbook".equals(mExportType);
     }
 
     private void dumpBookSummary(Node<?> root) throws IOException {
@@ -316,7 +318,7 @@ public class Exporter {
             Matcher m = imagePattern.matcher(content);
             while (m.find()) {
                 String url = m.group(0).replaceAll("[()]", "");
-                File path = new File(assetsDir, url.replace(mHost, ""));
+                File path = new File(assetsDir, url.replace(mBaseUrl, ""));
                 imageDownloader.addTask(url, path);
             }
         }
@@ -484,7 +486,7 @@ public class Exporter {
         @Override
         public DownLoadResult call() {
             try {
-                ResponseBody responseBody = callApi(() -> mBookStackApi.getImage(url.replace(mHost, "")).execute());
+                ResponseBody responseBody = callApi(() -> mBookStackApi.getImage(url.replace(mBaseUrl, "")).execute());
                 FileUtils.forceMkdir(path.getParentFile());
                 IOUtils.copy(responseBody.byteStream(), new FileOutputStream(path));
                 return new DownLoadResult(url, path, true);

@@ -5,10 +5,11 @@ import com.sun.net.httpserver.HttpHandler;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
-import site.hanschen.Exporter;
-import site.hanschen.GsonUtils;
-import site.hanschen.Log;
-import site.hanschen.Utils;
+import site.hanschen.exporter.Exporter;
+import site.hanschen.utils.CommandExecutor;
+import site.hanschen.utils.GsonUtils;
+import site.hanschen.utils.Log;
+import site.hanschen.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,21 +19,25 @@ import java.util.*;
 /**
  * @author chenhang
  */
-public class BookStackHookHandler implements HttpHandler {
+public class SyncHandler implements HttpHandler {
 
     private final Timer timer = new Timer();
     private final String outDir;
-    private final String host;
+    private final String baseUrl;
     private final String tokenId;
     private final String tokenSecret;
     private final String gitlabToken;
+    private final String gitbookName;
+    private final String gitbookDir;
 
-    public BookStackHookHandler(String outDir, String host, String tokenId, String tokenSecret, String gitlabToken) {
+    public SyncHandler(String outDir, String baseUrl, String tokenId, String tokenSecret, String gitlabToken, String gitbookName, String gitbookDir) {
         this.outDir = outDir;
-        this.host = host;
+        this.baseUrl = baseUrl;
         this.tokenId = tokenId;
         this.tokenSecret = tokenSecret;
         this.gitlabToken = gitlabToken;
+        this.gitbookName = gitbookName;
+        this.gitbookDir = gitbookDir;
     }
 
     @Override
@@ -69,7 +74,7 @@ public class BookStackHookHandler implements HttpHandler {
         @Override
         public void run() {
             try {
-                Exporter exporter = new Exporter(outDir, "gitbook", host, tokenId, tokenSecret, true);
+                Exporter exporter = new Exporter(outDir, "gitbook", baseUrl, tokenId, tokenSecret, true);
                 exporter.start();
 
                 Git git = Git.open(new File(outDir));
@@ -82,6 +87,14 @@ public class BookStackHookHandler implements HttpHandler {
                 git.commit().setMessage(commitMessage).call();
                 git.push().setCredentialsProvider(new UsernamePasswordCredentialsProvider("oauth2", gitlabToken)).call();
                 Log.println("push success");
+
+                if (gitbookName != null && gitbookName.length() > 0) {
+                    File gitbookSource = new File(outDir, gitbookName);
+                    if (gitbookSource.exists()) {
+                        String cmd = "gitbook build " + gitbookSource.getCanonicalPath() + " " + new File(gitbookDir).getCanonicalPath();
+                        CommandExecutor.exec(cmd, Log::println);
+                    }
+                }
             } catch (Throwable e) {
                 e.printStackTrace();
                 Log.println("oops, " + e, Log.RED);

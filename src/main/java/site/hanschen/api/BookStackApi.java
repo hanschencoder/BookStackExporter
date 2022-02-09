@@ -1,4 +1,4 @@
-package site.hanschen;
+package site.hanschen.api;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
