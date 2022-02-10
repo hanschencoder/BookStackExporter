@@ -2,6 +2,7 @@ package site.hanschen.sync;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
@@ -90,9 +91,16 @@ public class SyncHandler implements HttpHandler {
 
                 if (gitbookName != null && gitbookName.length() > 0) {
                     File gitbookSource = new File(outDir, gitbookName);
+                    File generateBook = new File(gitbookSource, "_book");
                     if (gitbookSource.exists()) {
-                        String cmd = "gitbook build " + gitbookSource.getCanonicalPath() + " " + new File(gitbookDir).getCanonicalPath();
-                        CommandExecutor.exec(cmd, Log::println);
+                        String cmd = "gitbook build";
+                        Process process = CommandExecutor.exec(cmd, Log::println, null, gitbookSource);
+                        if (process != null) {
+                            process.waitFor();
+                            File dstDir = new File(gitbookDir);
+                            FileUtils.deleteDirectory(dstDir);
+                            FileUtils.moveDirectory(generateBook, dstDir);
+                        }
                     }
                 }
             } catch (Throwable e) {

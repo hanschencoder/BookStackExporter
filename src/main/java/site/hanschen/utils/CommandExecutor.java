@@ -2,15 +2,12 @@ package site.hanschen.utils;
 
 import org.apache.commons.io.IOUtils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.StringTokenizer;
 
 public class CommandExecutor {
 
-    public static void exec(String command, Printer printer) {
+    public static Process exec(String command, Printer printer, String[] envp, File dir) {
         if (command.length() == 0) {
             throw new IllegalArgumentException("Empty command");
         }
@@ -21,18 +18,20 @@ public class CommandExecutor {
             cmdArray[i] = st.nextToken();
         }
 
-        exec(cmdArray, printer);
+        return exec(cmdArray, printer, envp, dir);
     }
 
-    public static void exec(String[] command, Printer printer) {
+    public static Process exec(String[] command, Printer printer, String[] envp, File dir) {
         try {
             printer.println("Exec Command: " + toString(command));
-            Process process = Runtime.getRuntime().exec(command);
+            Process process = Runtime.getRuntime().exec(command, envp, dir);
             OutputThread outputThread = new OutputThread(process.getInputStream(), printer);
             outputThread.start();
+            return process;
         } catch (Exception e) {
             printer.println("Oops, exec failed, command=[" + toString(command) + "], reason=" + e);
         }
+        return null;
     }
 
     private static String toString(String[] cmd) {
