@@ -11,6 +11,7 @@ import site.hanschen.entry.*;
 import site.hanschen.utils.Log;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -48,7 +49,13 @@ public class Exporter {
         File outDir = new File(mOutDir);
         if (outDir.exists()) {
             if (mForceOverwrite) {
-                deleteExcludeGit(outDir);
+                deleteExclude(outDir,
+                              pathname -> pathname.getName().equals(".git") ||
+                                          pathname.getName().equals(".gitignore") ||
+                                          pathname.getName().equals("node_modules") ||
+                                          pathname.getName().equals("book.json") ||
+                                          pathname.getName().equals("logo.png") ||
+                                          pathname.getName().equals("favicon.png"));
             } else {
                 Log.println(outDir.getCanonicalPath() + " already exists, use [-f] option to overwrite.", Log.RED);
                 return;
@@ -68,16 +75,20 @@ public class Exporter {
         }
     }
 
-    private void deleteExcludeGit(File file) throws IOException {
+    private void deleteExclude(File file, FileFilter fileFilter) throws IOException {
+        if (fileFilter.accept(file)) {
+            return;
+        }
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             if (files != null) {
                 for (File f : files) {
-                    if (f.getName().equals(".git")) {
-                        continue;
-                    }
-                    FileUtils.forceDelete(f);
+                    deleteExclude(f, fileFilter);
                 }
+            }
+            files = file.listFiles();
+            if (files == null || files.length == 0) {
+                FileUtils.deleteDirectory(file);
             }
         } else {
             FileUtils.forceDelete(file);
