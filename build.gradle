@@ -7,7 +7,7 @@ sourceCompatibility = "8"
 targetCompatibility = "8"
 
 group 'site.hanschen'
-version '0.1.1'
+version '0.1.2'
 mainClassName = 'site.hanschen.Main'
 
 static def splitArgs(String command) {

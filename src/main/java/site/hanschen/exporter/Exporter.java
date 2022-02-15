@@ -54,8 +54,7 @@ public class Exporter {
                                           pathname.getName().equals(".gitignore") ||
                                           pathname.getName().equals("node_modules") ||
                                           pathname.getName().equals("book.json") ||
-                                          pathname.getName().equals("logo.png") ||
-                                          pathname.getName().equals("favicon.png"));
+                                          pathname.getName().equals("bookinfo"));
             } else {
                 Log.println(outDir.getCanonicalPath() + " already exists, use [-f] option to overwrite.", Log.RED);
                 return;
@@ -204,12 +203,7 @@ public class Exporter {
                 if (isGitBook()) {
                     String markdown = node.generateMarkDown();
                     if (markdown != null) {
-                        File file;
-                        if (node.object instanceof Book) {
-                            file = new File(dir, "README.md");
-                        } else {
-                            file = new File(parentDir, node.getFileName() + ".md");
-                        }
+                        File file = new File(dir, "README.md");
                         FileUtils.writeStringToFile(file, markdown, StandardCharsets.UTF_8);
                     }
                 }
@@ -271,26 +265,44 @@ public class Exporter {
         for (Node<?> node : root.children) {
             if (node.object instanceof Book) {
                 StringBuilder builder = new StringBuilder();
-                handleDumpSummary(node, node.path, "", builder);
+                handleDumpSummary(node, node.path, "", "", builder);
                 FileUtils.writeStringToFile(new File(node.path, "SUMMARY.md"), builder.toString(), StandardCharsets.UTF_8);
             }
         }
     }
 
-    private void handleDumpSummary(Node<?> node, File rootDir, String prefix, StringBuilder builder) throws IOException {
+    private void handleDumpSummary(Node<?> node, File rootDir, String prefix, String currentLevel, StringBuilder builder) throws IOException {
 
         String relativePath = node.path.getCanonicalPath().replace(rootDir.getCanonicalPath(), "");
+        if (relativePath.startsWith("/")) {
+            relativePath = relativePath.replaceFirst("/", "");
+        }
 
         if (node.object instanceof Book) {
             builder.append(prefix).append("# ").append(node.getName()).append("\n\n");
         } else if (node.object instanceof Chapter) {
-            builder.append(prefix).append("* [").append(node.getName()).append("](.").append(relativePath).append(".md)\n");
+            builder.append(prefix)
+                    .append("* [")
+                    .append(currentLevel)
+                    .append(" ")
+                    .append(node.getName())
+                    .append("](")
+                    .append(relativePath)
+                    .append("/README.md)\n");
         } else if (node.object instanceof Page) {
-            builder.append(prefix).append("* [").append(node.getName()).append("](.").append(relativePath).append(")\n");
+            builder.append(prefix)
+                    .append("* [")
+                    .append(currentLevel)
+                    .append(" ")
+                    .append(node.getName())
+                    .append("](")
+                    .append(relativePath)
+                    .append(")\n");
         }
 
         for (Node<?> n : node.children) {
-            handleDumpSummary(n, rootDir, (node.object instanceof Book) ? prefix : "    " + prefix, builder);
+            String level = currentLevel + (node.children.indexOf(n) + 1) + ".";
+            handleDumpSummary(n, rootDir, (node.object instanceof Book) ? prefix : "    " + prefix, level, builder);
         }
     }
 
@@ -402,7 +414,11 @@ public class Exporter {
                 return filename;
             }
             String name = getName();
-            return name.toLowerCase().replaceAll("[\"#%&()+,/:;<=>?@|\\\\]", "");
+            name = name.toLowerCase().replaceAll("[\"#%&()+,/:;<=>?@|\\\\]", "");
+            if ("README.md".equals(name)) {
+                name = "_" + name;
+            }
+            return name;
         }
 
         public void setFilename(String filename) {

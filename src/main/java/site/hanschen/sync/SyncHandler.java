@@ -93,14 +93,14 @@ public class SyncHandler implements HttpHandler {
                     File gitbookSource = new File(outDir, gitbookName);
                     File generateBook = new File(gitbookSource, "_book");
                     if (gitbookSource.exists()) {
-                        String cmd = "gitbook build";
-                        Process process = CommandExecutor.exec(cmd, Log::println, null, gitbookSource);
-                        if (process != null) {
-                            process.waitFor();
-                            File dstDir = new File(gitbookDir);
-                            FileUtils.deleteDirectory(dstDir);
-                            FileUtils.moveDirectory(generateBook, dstDir);
-                        }
+                        Process process = CommandExecutor.exec("gitbook build", Log::println, null, gitbookSource);
+                        process.waitFor();
+                        process = CommandExecutor.exec("gitbook pdf", Log::println, null, gitbookSource);
+                        process.waitFor();
+                        File dstDir = new File(gitbookDir);
+                        FileUtils.deleteDirectory(dstDir);
+                        FileUtils.moveDirectory(generateBook, dstDir);
+                        FileUtils.moveFile(new File(gitbookSource, "book.pdf"), new File(dstDir, dstDir.getName() + ".pdf"));
                     }
                 }
             } catch (Throwable e) {
