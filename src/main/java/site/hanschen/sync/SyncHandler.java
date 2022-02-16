@@ -104,7 +104,7 @@ public class SyncHandler implements HttpHandler {
                     }
                 }
             } catch (Throwable e) {
-                e.printStackTrace();
+                Log.printStackTrace(e);
                 Log.println("oops, " + e, Log.RED);
             }
         }

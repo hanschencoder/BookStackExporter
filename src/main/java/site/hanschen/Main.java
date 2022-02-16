@@ -3,13 +3,19 @@ package site.hanschen;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.spi.HttpServerProvider;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import site.hanschen.exporter.Exporter;
 import site.hanschen.sync.SyncHandler;
 import site.hanschen.utils.Log;
 import site.hanschen.utils.Utils;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.logging.*;
 
 /**
  * @author chenhang
@@ -18,6 +24,16 @@ public class Main {
 
     public static void main(String[] args) {
         Utils.disableWarning();
+        try {
+            Log.setPrinter(new Printer(new File("./log", "log_exporter.txt")));
+        } catch (Exception ignored) {
+        }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> Log.println("VM Shutdown")));
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            Log.println("uncaughtException, thread=" + thread);
+            Log.println("uncaughtException, throwable=" + throwable);
+            Log.printStackTrace(throwable);
+        });
 
         CommandLine commandLine = parserOption(args);
         if (commandLine == null) {
@@ -50,7 +66,7 @@ public class Main {
             }
         } catch (Exception e) {
             Log.println(e.toString(), Log.RED);
-            e.printStackTrace();
+            Log.printStackTrace(e);
         }
     }
 
@@ -146,8 +162,49 @@ public class Main {
             return commandLine;
         } catch (Exception e) {
             hf.printHelp("BookStackExporter", options, true);
-            Log.print("\n" + e, Log.RED);
+            Log.println("\n" + e, Log.RED);
         }
         return null;
+    }
+
+    private static class Printer implements Log.Printer {
+
+        private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        private final Logger logger;
+
+        public Printer(File logFile) throws IOException {
+            FileUtils.forceMkdirParent(logFile);
+            logger = Logger.getLogger("book-stack-exporter");
+
+            for (Handler handler : logger.getHandlers()) {
+                logger.removeHandler(handler);
+            }
+            for (Handler handler : logger.getParent().getHandlers()) {
+                logger.getParent().removeHandler(handler);
+            }
+
+            Formatter formatter = new Formatter() {
+                @Override
+                public String format(LogRecord logRecord) {
+                    return logRecord.getMessage();
+                }
+            };
+            FileHandler fileHandler = new FileHandler(logFile.getCanonicalPath(), true);
+            fileHandler.setFormatter(formatter);
+            logger.addHandler(fileHandler);
+
+            ConsoleHandler consoleHandler = new ConsoleHandler();
+            consoleHandler.setFormatter(formatter);
+            logger.addHandler(consoleHandler);
+
+            logger.setLevel(Level.INFO);
+        }
+
+        @Override
+        public void println(String message) {
+            String prefix = "[" + sdf.format(new Date()) + "] ";
+            message = prefix + message + "\n";
+            logger.log(Level.INFO, message);
+        }
     }
 }

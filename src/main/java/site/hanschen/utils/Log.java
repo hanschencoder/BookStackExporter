@@ -1,9 +1,15 @@
 package site.hanschen.utils;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.UnknownHostException;
+
 /**
  * @author chenhang
  */
 public class Log {
+
+    public static Printer sPrinter = new DEFAULT_PRINTER();
 
     // Reset
     public static final String RESET = "\033[0m";  // Text Reset
@@ -78,16 +84,9 @@ public class Log {
     public static final String CYAN_BACKGROUND_BRIGHT = "\033[0;106m";  // CYAN
     public static final String WHITE_BACKGROUND_BRIGHT = "\033[0;107m";   // WHITE
 
-    public static void print(String message) {
-        print(message, null);
-    }
 
-    public static void print(String message, String code) {
-        if (code == null || code.length() == 0) {
-            System.out.print(message);
-        } else {
-            System.out.print(code + message + RESET);
-        }
+    public static void setPrinter(Printer printer) {
+        Log.sPrinter = printer;
     }
 
     public static void println(String message) {
@@ -96,9 +95,51 @@ public class Log {
 
     public static void println(String message, String code) {
         if (code == null || code.length() == 0) {
-            System.out.println(message);
+            doPrint(message);
         } else {
-            System.out.println(code + message + RESET);
+            doPrint(code + message + RESET);
+        }
+    }
+
+    public static void printStackTrace(Throwable t) {
+        doPrint(getStackTrace(t));
+    }
+
+    private static String getStackTrace(Throwable tr) {
+        if (tr == null) {
+            return "";
+        }
+
+        Throwable t = tr;
+        while (t != null) {
+            if (t instanceof UnknownHostException) {
+                return "";
+            }
+            t = t.getCause();
+        }
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        tr.printStackTrace(pw);
+        pw.flush();
+        return sw.toString();
+    }
+
+    private static void doPrint(String message) {
+        if (sPrinter != null) {
+            sPrinter.println(message);
+        }
+    }
+
+    public interface Printer {
+
+        void println(String message);
+    }
+
+    private static class DEFAULT_PRINTER implements Printer {
+        @Override
+        public void println(String message) {
+            System.out.println(message);
         }
     }
 }

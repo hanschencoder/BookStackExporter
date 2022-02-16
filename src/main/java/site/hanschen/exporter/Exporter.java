@@ -45,7 +45,7 @@ public class Exporter {
     }
 
     public void start() throws Exception {
-        Log.println("\nBookStackExporter start...", Log.GREEN);
+        Log.println("BookStackExporter start...", Log.GREEN);
         File outDir = new File(mOutDir);
         if (outDir.exists()) {
             if (mForceOverwrite) {
