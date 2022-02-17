@@ -54,7 +54,7 @@ public class Main {
                 String gitlabToken = commandLine.getOptionValue("gitlabToken", null);
                 String gitbookName = commandLine.getOptionValue("gitbookName", null);
                 String gitbookDir = commandLine.getOptionValue("gitbookDir", "./GitBook");
-                Log.println("WebHook Server Start");
+                Log.println("WebHook Server Start", Log.GREEN);
                 HttpServerProvider provider = HttpServerProvider.provider();
                 HttpServer httpserver = provider.createHttpServer(new InetSocketAddress(port), 0);
                 httpserver.createContext("/webhooks", new SyncHandler(outDir, baseUrl, tokenId, tokenSecret, gitlabToken, gitbookName, gitbookDir));
