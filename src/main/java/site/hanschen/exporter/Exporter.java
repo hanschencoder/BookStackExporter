@@ -62,7 +62,7 @@ public class Exporter {
 
         }
         FileUtils.forceMkdir(outDir);
-        Log.println("ExportType=" + mExportType + ", OutDir=" + outDir.getCanonicalPath() + "\n");
+        Log.println("ExportType=" + mExportType + ", OutDir=" + outDir.getCanonicalPath());
 
         Node<?> root = buildBookHierarchy();
         root.path = outDir;

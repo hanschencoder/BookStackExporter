@@ -175,13 +175,7 @@ public class Main {
         public Printer(File logFile) throws IOException {
             FileUtils.forceMkdirParent(logFile);
             logger = Logger.getLogger("book-stack-exporter");
-
-            for (Handler handler : logger.getHandlers()) {
-                logger.removeHandler(handler);
-            }
-            for (Handler handler : logger.getParent().getHandlers()) {
-                logger.getParent().removeHandler(handler);
-            }
+            logger.setUseParentHandlers(false);
 
             Formatter formatter = new Formatter() {
                 @Override
