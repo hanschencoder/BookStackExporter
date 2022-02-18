@@ -103,21 +103,6 @@ public class Book {
         if (description.length() > 0) {
             descriptionString = "\n" + description + "\n";
         }
-        return String.format("# %s\n" +
-                             "%s" +
-                             "%s" +
-                             "\n| 属性        | 值   |\n" +
-                             "|:---------:|:---:|\n" +
-                             "| createdAt |  %s |\n" +
-                             "| updatedAt |  %s |\n" +
-                             "| createdBy |  %s |\n" +
-                             "| updatedBy |  %s |\n",
-                             name,
-                             tagsString,
-                             descriptionString,
-                             Utils.formatDate(createdAt),
-                             Utils.formatDate(updatedAt),
-                             createdBy.name,
-                             updatedBy.name);
+        return String.format("# %s\n" + "%s" + "%s\n", name, tagsString, descriptionString);
     }
 }

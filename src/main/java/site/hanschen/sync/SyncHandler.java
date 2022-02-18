@@ -75,7 +75,7 @@ public class SyncHandler implements HttpHandler {
         @Override
         public void run() {
             try {
-                Log.println(commitMessage);
+                Log.println(commitMessage, Log.GREEN);
                 Exporter exporter = new Exporter(outDir, "gitbook", baseUrl, tokenId, tokenSecret, true);
                 exporter.start();
 
