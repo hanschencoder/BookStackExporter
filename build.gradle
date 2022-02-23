@@ -7,7 +7,7 @@ sourceCompatibility = "8"
 targetCompatibility = "8"
 
 group 'site.hanschen'
-version '0.1.2'
+version '0.1.3'
 mainClassName = 'site.hanschen.Main'
 
 static def splitArgs(String command) {
@@ -29,8 +29,8 @@ run {
                       -tokenSecret 587dWlqZ1lgvD6xjMGWo1cAVbAMltfgf
                       -webhookPort 6876 
                       -gitlabToken d6TJxMXHr4byYQJG-Cy7 
-                      -gitbookName 我的图书 
-                      -gitbookDir ./GitBook 
+                      -vuePressDir ./VuePress 
+                      -vuePressTemplate ./VuePressTemplate
                       -f
                       -h
                    ''')

@@ -4,3 +4,5 @@ BookStack/
 build/
 GitBook/
 log/
+VuePress/
+VuePressTemplate/

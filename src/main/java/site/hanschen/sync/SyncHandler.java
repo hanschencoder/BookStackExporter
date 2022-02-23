@@ -15,6 +15,8 @@ import site.hanschen.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -28,17 +30,23 @@ public class SyncHandler implements HttpHandler {
     private final String tokenId;
     private final String tokenSecret;
     private final String gitlabToken;
-    private final String gitbookName;
-    private final String gitbookDir;
+    private final String vuePressTemplate;
+    private final String vuePressDir;
 
-    public SyncHandler(String outDir, String baseUrl, String tokenId, String tokenSecret, String gitlabToken, String gitbookName, String gitbookDir) {
+    public SyncHandler(String outDir,
+                       String baseUrl,
+                       String tokenId,
+                       String tokenSecret,
+                       String gitlabToken,
+                       String vuePressTemplate,
+                       String vuePressDir) {
         this.outDir = outDir;
         this.baseUrl = baseUrl;
         this.tokenId = tokenId;
         this.tokenSecret = tokenSecret;
         this.gitlabToken = gitlabToken;
-        this.gitbookName = gitbookName;
-        this.gitbookDir = gitbookDir;
+        this.vuePressTemplate = vuePressTemplate;
+        this.vuePressDir = vuePressDir;
     }
 
     @Override
@@ -90,24 +98,68 @@ public class SyncHandler implements HttpHandler {
                 git.push().setCredentialsProvider(new UsernamePasswordCredentialsProvider("oauth2", gitlabToken)).call();
                 Log.println("push success");
 
-                if (gitbookName != null && gitbookName.length() > 0) {
-                    File gitbookSource = new File(outDir, gitbookName);
-                    File generateBook = new File(gitbookSource, "_book");
+                File sourceRoot = new File(outDir);
+                File[] source = sourceRoot.listFiles();
+                if (source == null || source.length <= 0) {
+                    return;
+                }
+                for (File gitbookSource : source) {
+                    if (!gitbookSource.isDirectory() || gitbookSource.getName().equals(".git")) {
+                        continue;
+                    }
                     if (gitbookSource.exists()) {
-                        Process process = CommandExecutor.exec("gitbook build", Log::println, null, gitbookSource);
+                        Log.println("gitbook build: " + gitbookSource.getName());
+                        Process process = CommandExecutor.exec("gitbook build", log -> {
+                        }, null, gitbookSource);
                         process.waitFor();
-                        process = CommandExecutor.exec("gitbook pdf", Log::println, null, gitbookSource);
+                        Log.println("gitbook pdf: " + gitbookSource.getName());
+                        process = CommandExecutor.exec("gitbook pdf", log -> {
+                        }, null, gitbookSource);
                         process.waitFor();
-                        File dstDir = new File(gitbookDir);
-                        FileUtils.deleteDirectory(dstDir);
-                        FileUtils.moveDirectory(generateBook, dstDir);
-                        FileUtils.moveFile(new File(gitbookSource, "book.pdf"), new File(dstDir, dstDir.getName() + ".pdf"));
+                        Log.println("generate success: " + gitbookSource.getName() + ".pdf");
                     }
                 }
+
+                File vueTemplate = new File(vuePressTemplate);
+                FileUtils.copyFile(new File(sourceRoot, "VuePressConfig.js"), new File(vueTemplate, "/docs/.vuepress/config.js"));
+
+                for (File gitbookSource : source) {
+                    if (!gitbookSource.isDirectory() || gitbookSource.getName().equals(".git")) {
+                        continue;
+                    }
+                    createSymbolicLink(new File(vueTemplate, "/docs/" + gitbookSource.getName()), gitbookSource);
+
+                    File symbolAsset = new File(vueTemplate, "/docs/.vuepress/public/" + gitbookSource.getName() + "/assets");
+                    FileUtils.forceMkdirParent(symbolAsset);
+                    createSymbolicLink(symbolAsset, new File(gitbookSource, "assets"));
+
+                    FileUtils.deleteDirectory(new File(gitbookSource, "_book"));
+                    File targetPdf = new File(vueTemplate, "/docs/.vuepress/public/" + gitbookSource.getName() + ".pdf");
+                    if (targetPdf.exists()) {
+                        FileUtils.delete(targetPdf);
+                    }
+                    FileUtils.moveFile(new File(gitbookSource, "book.pdf"), targetPdf);
+                }
+
+                Log.println("yarn docs:build start");
+                Process process = CommandExecutor.exec("yarn docs:build", log -> {
+                }, null, vueTemplate);
+                process.waitFor();
+                FileUtils.deleteDirectory(new File(vuePressDir));
+                FileUtils.moveDirectory(new File(vueTemplate, "docs/.vuepress/dist"), new File(vuePressDir));
+                Log.println("yarn docs:build success");
             } catch (Throwable e) {
                 Log.printStackTrace(e);
                 Log.println("oops, " + e, Log.RED);
             }
+        }
+
+        private void createSymbolicLink(File link, File target) throws IOException {
+            if (link.exists()) {
+                return;
+            }
+            Files.createSymbolicLink(Paths.get(link.getCanonicalPath()), Paths.get(target.getCanonicalPath()));
+
         }
     }
 }

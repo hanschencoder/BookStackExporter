@@ -52,12 +52,13 @@ public class Main {
             if (syncServer) {
                 int port = Integer.parseInt(commandLine.getOptionValue("webhookPort"));
                 String gitlabToken = commandLine.getOptionValue("gitlabToken", null);
-                String gitbookName = commandLine.getOptionValue("gitbookName", null);
-                String gitbookDir = commandLine.getOptionValue("gitbookDir", "./GitBook");
+                String vuePressTemplate = commandLine.getOptionValue("vuePressTemplate", null);
+                String vuePressDir = commandLine.getOptionValue("vuePressDir", "./VuePress");
                 Log.println("WebHook Server Start", Log.GREEN);
                 HttpServerProvider provider = HttpServerProvider.provider();
                 HttpServer httpserver = provider.createHttpServer(new InetSocketAddress(port), 0);
-                httpserver.createContext("/webhooks", new SyncHandler(outDir, baseUrl, tokenId, tokenSecret, gitlabToken, gitbookName, gitbookDir));
+                httpserver.createContext("/webhooks",
+                                         new SyncHandler(outDir, baseUrl, tokenId, tokenSecret, gitlabToken, vuePressTemplate, vuePressDir));
                 httpserver.setExecutor(null);
                 httpserver.start();
             } else {
@@ -115,11 +116,11 @@ public class Main {
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option("gitbookName", null, true, "Name of GitBook");
+        opt = new Option("vuePressTemplate", null, true, "VuePress template dir");
         opt.setRequired(false);
         options.addOption(opt);
 
-        opt = new Option("gitbookDir", null, true, "Output of GitBook build");
+        opt = new Option("vuePressDir", null, true, "Output of VuePress build");
         opt.setRequired(false);
         options.addOption(opt);
 
@@ -146,6 +147,9 @@ public class Main {
                 }
                 if (!commandLine.hasOption("gitlabToken")) {
                     throw new IllegalArgumentException("gitlabToken not found");
+                }
+                if (!commandLine.hasOption("vuePressTemplate")) {
+                    throw new IllegalArgumentException("vuePressTemplate not found");
                 }
             } else {
                 String[] fileTypes = new String[]{"html", "pdf", "plaintext", "markdown", "gitbook"};

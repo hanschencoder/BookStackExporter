@@ -1,5 +1,7 @@
 package site.hanschen.exporter;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -8,6 +10,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import site.hanschen.api.BookStackApi;
 import site.hanschen.entry.*;
+import site.hanschen.utils.GsonUtils;
 import site.hanschen.utils.Log;
 
 import java.io.File;
@@ -70,6 +73,7 @@ public class Exporter {
 
         if (isGitBook()) {
             dumpBookSummary(root);
+            dumpVuePress(root);
             downloadImage(root);
         }
     }
@@ -304,6 +308,115 @@ public class Exporter {
             String level = currentLevel + (node.children.indexOf(n) + 1) + ".";
             handleDumpSummary(n, rootDir, (node.object instanceof Book) ? prefix : "    " + prefix, level, builder);
         }
+    }
+
+    private void dumpVuePress(Node<?> root) throws IOException {
+        JsonObject rootJsonObject = new JsonObject();
+        rootJsonObject.addProperty("title", "Flyme 系统研发");
+        rootJsonObject.addProperty("description", "系统研发组");
+
+        JsonArray headArray = new JsonArray();
+        rootJsonObject.add("head", headArray);
+        JsonArray favArray = new JsonArray();
+        headArray.add(favArray);
+        favArray.add("link");
+        JsonObject favObj = new JsonObject();
+        favObj.addProperty("rel", "icon");
+        favObj.addProperty("href", "/favicon.png");
+        favArray.add(favObj);
+
+        JsonArray plugins = new JsonArray();
+        rootJsonObject.add("plugins", plugins);
+        plugins.add("pangu");
+        plugins.add("flexsearch-pro");
+        plugins.add("vuepress-plugin-code-copy");
+
+        JsonObject themeConfig = new JsonObject();
+        rootJsonObject.add("themeConfig", themeConfig);
+        themeConfig.addProperty("smoothScroll", true);
+        themeConfig.addProperty("subSidebar", "auto");
+        themeConfig.addProperty("copyright", "系统研发组 2022");
+
+        JsonArray nav = new JsonArray();
+        themeConfig.add("nav", nav);
+        JsonObject navItem = new JsonObject();
+        nav.add(navItem);
+        navItem.addProperty("text", "首页");
+        navItem.addProperty("link", "/");
+
+        navItem = new JsonObject();
+        nav.add(navItem);
+        navItem.addProperty("text", "在线编辑");
+        navItem.addProperty("link", "http://coresystem.meizu.com:6875/");
+
+        navItem = new JsonObject();
+        nav.add(navItem);
+        navItem.addProperty("text", "图书选择");
+        JsonArray bookArray = new JsonArray();
+        navItem.add("items", bookArray);
+
+        navItem = new JsonObject();
+        nav.add(navItem);
+        navItem.addProperty("text", "PDF 下载");
+        JsonArray pdfArray = new JsonArray();
+        navItem.add("items", pdfArray);
+
+        navItem = new JsonObject();
+        nav.add(navItem);
+        navItem.addProperty("text", "GitLab");
+        navItem.addProperty("link", "http://gitlab.meizu.com/chenhang/CoreSystemDocument");
+
+        JsonObject sidebar = new JsonObject();
+        themeConfig.add("sidebar", sidebar);
+
+        for (Node<?> node : root.children) {
+            if (node.object instanceof Book && node.children.size() > 0) {
+                JsonObject book = new JsonObject();
+                handleDumpVuePress(node, root.path, book, "");
+                sidebar.add("/" + node.path.getName() + "/", book.get("children"));
+
+                JsonObject item = new JsonObject();
+                bookArray.add(item);
+                item.addProperty("text", node.getName());
+                item.addProperty("link", "/" + node.path.getName() + "/");
+
+                item = new JsonObject();
+                pdfArray.add(item);
+                item.addProperty("text", node.getName());
+                item.addProperty("link", "http://coresystem.meizu.com:6877/" + node.path.getName() + ".pdf");
+            }
+        }
+        FileUtils.writeStringToFile(new File(root.path, "VuePressConfig.js"),
+                                    "module.exports = " + GsonUtils.prettyJson(rootJsonObject),
+                                    StandardCharsets.UTF_8);
+    }
+
+    private void handleDumpVuePress(Node<?> node, File rootDir, JsonObject jsonObject, String currentLevel) throws IOException {
+
+        String relativePath = node.path.getCanonicalPath().replace(rootDir.getCanonicalPath(), "");
+
+        if (node.object instanceof Chapter) {
+            jsonObject.addProperty("title", currentLevel + " " + node.getName());
+            jsonObject.addProperty("path", relativePath + "/");
+            if (node.children.size() > 0) {
+                jsonObject.addProperty("collapsable", true);
+            }
+        } else if (node.object instanceof Page) {
+            jsonObject.addProperty("title", currentLevel + " " + node.getName());
+            jsonObject.addProperty("path", relativePath);
+        }
+
+        if (node.children.size() > 0) {
+            JsonArray jsonArray = new JsonArray();
+            jsonObject.add("children", jsonArray);
+            for (Node<?> n : node.children) {
+                JsonObject object = new JsonObject();
+                jsonArray.add(object);
+                String level = currentLevel + (node.children.indexOf(n) + 1) + ".";
+                handleDumpVuePress(n, rootDir, object, level);
+            }
+        }
+
     }
 
     private void downloadImage(Node<?> root) throws IOException {
