@@ -131,6 +131,10 @@ public class Exporter {
         // 3. fetch pages
         Data allPage = callApi(() -> mBookStackApi.getAllPage(mToken).execute());
         for (Data.DataEntry entry : allPage.data) {
+            if (entry.draft) {
+                Log.println("drop page: " + entry.name);
+                continue;
+            }
             Page page = callApi(() -> mBookStackApi.getPage(mToken, entry.id).execute());
             Node<Page> pageNode = new Node<>(page);
             Node<Chapter> chapterNode = chapters.get(page.chapterId);
@@ -155,6 +159,7 @@ public class Exporter {
     }
 
     private static <T> T callApi(Callable<Response<T>> callable) throws Exception {
+        Thread.sleep(200);
         Response<T> response = callable.call();
         if (!response.isSuccessful()) {
             throw new IOException("response.code()=" + response.code());
