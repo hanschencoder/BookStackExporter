@@ -5,21 +5,22 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 import site.hanschen.entry.*;
 
 public interface BookStackApi {
 
     @GET("api/shelves")
-    Call<Data> getAllShelve(@Header("Authorization") String token);
+    Call<Data> getAllShelve(@Header("Authorization") String token, @Query("count") int count);
 
     @GET("api/books")
-    Call<Data> getAllBook(@Header("Authorization") String token);
+    Call<Data> getAllBook(@Header("Authorization") String token, @Query("count") int count);
 
     @GET("api/chapters")
-    Call<Data> getAllChapter(@Header("Authorization") String token);
+    Call<Data> getAllChapter(@Header("Authorization") String token, @Query("count") int count);
 
     @GET("api/pages")
-    Call<Data> getAllPage(@Header("Authorization") String token);
+    Call<Data> getAllPage(@Header("Authorization") String token, @Query("count") int count);
 
     @GET("api/shelves/{id}")
     Call<Shelve> getShelve(@Header("Authorization") String token, @Path("id") int id);

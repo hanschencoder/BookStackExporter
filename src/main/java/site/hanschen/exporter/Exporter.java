@@ -106,7 +106,7 @@ public class Exporter {
         HashMap<Integer, Node<Chapter>> chapters = new HashMap<>();
 
         // 1. fetch books
-        Data allBook = callApi(() -> mBookStackApi.getAllBook(mToken).execute());
+        Data allBook = callApi(() -> mBookStackApi.getAllBook(mToken, Integer.MAX_VALUE).execute());
         for (Data.DataEntry entry : allBook.data) {
             Book book = callApi(() -> mBookStackApi.getBook(mToken, entry.id).execute());
             Node<Book> bookNode = new Node<>(book);
@@ -115,7 +115,7 @@ public class Exporter {
         }
 
         // 2. fetch chapters
-        Data allChapter = callApi(() -> mBookStackApi.getAllChapter(mToken).execute());
+        Data allChapter = callApi(() -> mBookStackApi.getAllChapter(mToken, Integer.MAX_VALUE).execute());
         for (Data.DataEntry entry : allChapter.data) {
             Chapter chapter = callApi(() -> mBookStackApi.getChapter(mToken, entry.id).execute());
             Node<Book> bookNode = books.get(chapter.bookId);
@@ -129,7 +129,7 @@ public class Exporter {
         }
 
         // 3. fetch pages
-        Data allPage = callApi(() -> mBookStackApi.getAllPage(mToken).execute());
+        Data allPage = callApi(() -> mBookStackApi.getAllPage(mToken, Integer.MAX_VALUE).execute());
         for (Data.DataEntry entry : allPage.data) {
             if (entry.draft) {
                 Log.println("drop page: " + entry.name);
