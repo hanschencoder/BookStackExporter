@@ -4,7 +4,7 @@ Support export from BookStack to Markdown, HTML, PDF, TXT and GitBook.
 
 # Download
 
- - `0.1.2`: [https://github.com/shensky711/BookStackExporter/releases/tag/0.1.2](https://github.com/shensky711/BookStackExporter/releases/tag/0.1.2)
+ - `0.1.2`: [https://github.com/hanschencoder/BookStackExporter/releases/tag/0.1.4](https://github.com/hanschencoder/BookStackExporter/releases/tag/0.1.4)
 
 # Usage
 
